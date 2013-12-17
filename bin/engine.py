@@ -367,17 +367,20 @@ def do_poll(snmpcmd):
     ifHCInOctets_results = do_snmpwalk(snmpcmd, ifHCInOctets_oid)
     for oid, val in sorted(ifHCInOctets_results.items()): 
 	last_octet = get_oid_last_octet(oid)
-	if val:
-		ifmap[last_octet]['ifHCInOctets'] = int(val)
-	else:
+	if val == {}:
 		ifmap[last_octet]['ifHCInOctets'] = 0
+	else:
+		ifmap[last_octet]['ifHCInOctets'] = int(val)
 	
     # ifHCOutOctets
     ifHCOutOctets_oid = '.1.3.6.1.2.1.31.1.1.1.10'
     ifHCOutOctets_results = do_snmpwalk(snmpcmd, ifHCOutOctets_oid)
     for oid, val in sorted(ifHCOutOctets_results.items()): 
 	last_octet = get_oid_last_octet(oid)
-	ifmap[last_octet]['ifHCOutOctets'] = int(val)
+        if val == {}:
+                ifmap[last_octet]['ifHCOutOctets'] = 0
+        else:
+                ifmap[last_octet]['ifHCOutOctets'] = int(val)
  
     # print ifmap
     for key,value in ifmap.iteritems():
@@ -401,7 +404,18 @@ def do_poll(snmpcmd):
         else:
                 ifadminstatus = str("down")
 
-    	writeEvent("logtype=ifstat, hostname="+hostname+", ip="+ip+", interface="+ifmap[key]['name']+", description=\""+ifmap[key]['desc']+"\", speed="+ifmap[key]['speed']+", vlan="+ifvlan+", type="+str(ifmap[key]['port_type'])+", operstatus="+ifoperstatus+", adminstatus="+ifadminstatus+", ifHCInOctets="+str(ifmap[key]['ifHCInOctets'])+", ifHCOutOctets="+str(ifmap[key]['ifHCOutOctets'])+", lastchange="+ifmap[key]['lastchange']+",")
+
+        if ifmap[key]['ifHCInOctets'] == {}:
+                ifHCInOctets = 0
+        else:
+                ifHCInOctets = int(val)
+
+        if ifmap[key]['ifHCOutOctets'] == {}:
+                ifHCOutOctets = 0
+        else:
+                ifHCOutOctets = int(val)
+
+    	writeEvent("logtype=ifstat, hostname="+hostname+", ip="+ip+", interface="+ifmap[key]['name']+", description=\""+ifmap[key]['desc']+"\", speed="+ifmap[key]['speed']+", vlan="+ifvlan+", type="+str(ifmap[key]['port_type'])+", operstatus="+ifoperstatus+", adminstatus="+ifadminstatus+", ifHCInOctets="+str(ifHCInOctets)+", ifHCOutOctets="+str(ifHCOutOctets)+", lastchange="+ifmap[key]['lastchange']+",")
 
     #
     # CDP
@@ -434,7 +448,7 @@ def do_poll(snmpcmd):
     # Iterate 
     for key,value in cdpmap.iteritems():
 
-	writeEvent("logtype=cdp, hostname="+hostname+", ip="+ip+", neighbour="+cdpmap[key]['neighbour']+", remoteif="+cdpmap[key]['remoteif']+", remote_model=\""+cdpmap[key]['remote_model']+"\",")
+	writeEvent("logtype=cdp, hostname="+hostname+", ip="+ip.rstrip()+", neighbour="+cdpmap[key]['neighbour']+", remoteif="+cdpmap[key]['remoteif']+", remote_model=\""+cdpmap[key]['remote_model']+"\",")
 
 
 def process_conf():
